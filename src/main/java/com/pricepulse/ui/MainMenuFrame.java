@@ -1,5 +1,6 @@
 package com.pricepulse.ui;
 
+import com.pricepulse.ItemService;
 import com.pricepulse.model.User;
 
 import javax.swing.*;
@@ -9,6 +10,9 @@ import java.awt.*;
 public class MainMenuFrame extends JFrame {
 
     private final JTabbedPane tabs = new JTabbedPane();
+
+    // Product service
+    private final ItemService itemService = new ItemService();
 
     // =========================
     // COLORS
@@ -329,7 +333,23 @@ public class MainMenuFrame extends JFrame {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
 
-                showComingSoon(moduleName);
+                // =========================
+                // PRODUCTS
+                // =========================
+
+                if (moduleName.equals("Products")) {
+
+                    ProductPanel productPanel =
+                            new ProductPanel(itemService);
+
+                    addModuleTab("Products", productPanel);
+
+                    tabs.setSelectedComponent(productPanel);
+
+                } else {
+
+                    showComingSoon(moduleName);
+                }
             }
         });
 
@@ -432,6 +452,7 @@ public class MainMenuFrame extends JFrame {
     // =====================================================
 
     public void addModuleTab(String title, JPanel panel) {
+
         tabs.addTab(title, panel);
     }
 }
