@@ -14,6 +14,10 @@ import java.util.function.Consumer;
  * disposes itself. Main hooks onSuccess to open MainMenuFrame.
  */
 public class AuthWindow extends JFrame {
+    private static final Color PRIMARY = new Color(37, 99, 235);
+    private static final Color BACKGROUND = new Color(245, 247, 250);
+    private static final Color TEXT = new Color(31, 41, 55);
+    private static final Color MUTED = new Color(107, 114, 128);
     private final AuthService authService;
     private final Consumer<User> onSuccess;
 
@@ -33,11 +37,13 @@ public class AuthWindow extends JFrame {
 
     public AuthWindow(AuthService authService, Consumer<User> onSuccess) {
         super("PricePulse — Login");
+        getContentPane().setBackground(BACKGROUND);
         this.authService = authService;
         this.onSuccess = onSuccess;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        setSize(500, 500);
 
         cards.add(buildLoginPanel(), "LOGIN");
         cards.add(buildSignUpPanel(), "SIGNUP");
@@ -56,7 +62,26 @@ public class AuthWindow extends JFrame {
 
         int row = 0;
         gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 2;
-        panel.add(new JLabel("Log in to PricePulse", SwingConstants.CENTER), gbc);
+        JLabel title = new JLabel("PricePulse", SwingConstants.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 28));
+        title.setForeground(PRIMARY);
+
+        panel.add(title, gbc);
+        row++;
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.gridwidth = 2;
+
+        JLabel subtitle = new JLabel(
+        "Track prices. Find better deals.",
+        SwingConstants.CENTER);
+
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtitle.setForeground(MUTED);
+
+        panel.add(subtitle, gbc);
+
         gbc.gridwidth = 1;
 
         row++;
@@ -79,6 +104,10 @@ public class AuthWindow extends JFrame {
 
         row++;
         JButton loginBtn = new JButton("Login");
+        loginBtn.setBackground(PRIMARY);
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginBtn.setFocusPainted(false);
         loginBtn.addActionListener(this::handleLogin);
         gbc.gridx = 0; gbc.gridy = row;
         panel.add(loginBtn, gbc);
