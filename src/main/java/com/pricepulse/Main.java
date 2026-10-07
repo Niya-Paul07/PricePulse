@@ -1,5 +1,6 @@
-package com.pricepulse;
 
+package com.pricepulse;
+import com.pricepulse.service.PriceTrackerService;
 import com.pricepulse.auth.AuthService;
 import com.pricepulse.ui.AuthWindow;
 import com.pricepulse.ui.MainMenuFrame;
@@ -17,6 +18,8 @@ public class Main {
     public static void main(String[] args) {
         AuthService authService = new AuthService("data/users.csv");
         authService.loadData();
+           PriceTrackerService tracker = new PriceTrackerService("data", authService.getAllUsers());
+   tracker.loadData();
 
         SwingUtilities.invokeLater(() -> {
             AuthWindow authWindow = new AuthWindow(authService, user -> {
@@ -27,6 +30,7 @@ public class Main {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
                         authService.saveData();
+                        tracker.saveData();
                     }
                 });
             });
