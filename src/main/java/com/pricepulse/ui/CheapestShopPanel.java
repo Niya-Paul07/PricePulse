@@ -5,7 +5,7 @@ import java.awt.*;
 import java.util.List;
 
 import com.pricepulse.model.PriceEntry;
-
+import com.pricepulse.service.CheapestShopService;
 public class CheapestShopPanel extends JPanel {
 
     private JTextField productField;
@@ -13,10 +13,13 @@ public class CheapestShopPanel extends JPanel {
     private JLabel resultLabel;
 
     private List<PriceEntry> priceEntries;
+    private CheapestShopService
+    CheapestShopService;
 
     public CheapestShopPanel(List<PriceEntry> priceEntries) {
 
         this.priceEntries = priceEntries;
+        this.CheapestShopService=new CheapestShopService();
 
         setLayout(new FlowLayout());
 
@@ -41,41 +44,27 @@ public class CheapestShopPanel extends JPanel {
 
     private void findCheapestShop() {
 
-        String product = productField.getText().trim();
+    String product = productField.getText().trim();
 
-        if (product.isEmpty()) {
-            resultLabel.setText("Please enter a product name.");
-            return;
-        }
-
-        PriceEntry cheapest = null;
-
-        for (PriceEntry entry : priceEntries) {
-
-            if (entry.getItem().getName().equalsIgnoreCase(product)) {
-
-                if (cheapest == null ||
-                        entry.getPrice() < cheapest.getPrice()) {
-
-                    cheapest = entry;
-                }
-            }
-        }
-
-        if (cheapest == null) {
-
-            resultLabel.setText(
-                    "No price found for " + product
-            );
-
-        } else {
-
-            resultLabel.setText(
-                    "Cheapest: " +
-                    cheapest.getShop().getName() +
-                    " - Rs. " +
-                    cheapest.getPrice()
-            );
-        }
+    if (product.isEmpty()) {
+        resultLabel.setText("Please enter a product name.");
+        return;
     }
-}
+
+    PriceEntry cheapest =
+            CheapestShopService.findCheapestShop(
+                    product,
+                    priceEntries
+            );
+
+    if (cheapest == null) {
+        resultLabel.setText("No price found for " + product);
+    } else {
+        resultLabel.setText(
+                "Cheapest: " +
+                cheapest.getShop().getName() +
+                " - Rs. " +
+                cheapest.getPrice()
+        );
+    }
+}}
