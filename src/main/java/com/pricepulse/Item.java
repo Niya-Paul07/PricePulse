@@ -2,6 +2,7 @@ package com.pricepulse;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.pricepulse.model.PriceEntry;
 
 public class Item {
 
