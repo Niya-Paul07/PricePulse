@@ -758,7 +758,7 @@ public class MainMenuFrame extends JFrame {
                         //CHEAPEST SHOP
                         //==========================
                         else if (moduleName.equals("Cheapest Shop")){
-                                CheapestShopPanel CheapestShopPanel=new CheapestShopPanel();
+                                CheapestShopPanel CheapestShopPanel =new CheapestShopPanel(java.util.Collections.emptyList());
                                 addModuleTab("Cheapest Shop", CheapestShopPanel);
                                 tabs.setSelectedComponent(CheapestShopPanel);
                         }
@@ -919,7 +919,7 @@ public class MainMenuFrame extends JFrame {
                             java.awt.event.MouseEvent e
                     ) {
 
-                        addModuleTab("Cheapest Shop", new CheapestShopPanel());
+                        addModuleTab("Cheapest Shop", new CheapestShopPanel(java.util.Collections.emptyList()));
                         
                     }
                 }
