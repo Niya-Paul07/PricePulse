@@ -1,5 +1,6 @@
 package com.pricepulse.ui;
 
+import com.pricepulse.auth.AuthService;
 import com.pricepulse.ItemService;
 import com.pricepulse.ShopService;
 import com.pricepulse.model.User;
@@ -19,9 +20,12 @@ public class MainMenuFrame extends JFrame {
     // =========================
     // SERVICES
     // =========================
-
+    
     private final ItemService itemService = new ItemService();
     private final ShopService shopService = new ShopService();
+
+    private final AuthService authService;
+    private final User currentUser;
 
     // =========================
     // COLORS
@@ -49,9 +53,13 @@ public class MainMenuFrame extends JFrame {
     // CONSTRUCTOR
     // =========================
 
-    public MainMenuFrame(User user) {
+    public MainMenuFrame(User user, AuthService authService) {
 
         super("PricePulse");
+
+        this.authService = authService;
+        this.currentUser = user;
+
 
         setDefaultCloseOperation(
                 JFrame.EXIT_ON_CLOSE
@@ -573,205 +581,100 @@ public class MainMenuFrame extends JFrame {
     // =====================================================
 
     private JPanel createActionCard(
-            String title,
-            String description,
-            String moduleName
-    ) {
+        String title,
+        String description,
+        String moduleName
+) {
+    JPanel card = new JPanel(new BorderLayout());
+    card.setBackground(CARD);
+    card.setBorder(
+            BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    new EmptyBorder(16, 18, 16, 15)
+            )
+    );
+    card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JPanel card =
-                new JPanel(
-                        new BorderLayout()
-                );
+    JPanel textPanel = new JPanel();
+    textPanel.setLayout(
+            new BoxLayout(textPanel, BoxLayout.Y_AXIS)
+    );
+    textPanel.setBackground(CARD);
 
-        card.setBackground(CARD);
+    JLabel titleLabel = new JLabel(title);
+    titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+    titleLabel.setForeground(TEXT);
 
-        card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                BORDER
-                        ),
-                        new EmptyBorder(
-                                16,
-                                18,
-                                16,
-                                15
-                        )
-                )
-        );
+    JLabel descriptionLabel = new JLabel(description);
+    descriptionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+    descriptionLabel.setForeground(MUTED);
 
-        // =========================
-        // TEXT PANEL
-        // =========================
+    textPanel.add(titleLabel);
+    textPanel.add(Box.createVerticalStrut(5));
+    textPanel.add(descriptionLabel);
 
-        JPanel textPanel = new JPanel();
+    card.add(textPanel, BorderLayout.CENTER);
 
-        textPanel.setLayout(
-                new BoxLayout(
-                        textPanel,
-                        BoxLayout.Y_AXIS
-                )
-        );
+    card.addMouseListener(new java.awt.event.MouseAdapter() {
+        @Override
+        public void mouseEntered(java.awt.event.MouseEvent e) {
+            card.setBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(PRIMARY),
+                            new EmptyBorder(16, 18, 16, 15)
+                    )
+            );
+        }
 
-        textPanel.setBackground(CARD);
+        @Override
+        public void mouseExited(java.awt.event.MouseEvent e) {
+            card.setBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(BORDER),
+                            new EmptyBorder(16, 18, 16, 15)
+                    )
+            );
+        }
 
-        JLabel titleLabel =
-                new JLabel(title);
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent e) {
+            if (moduleName.equals("Products")) {
+                ProductPanel panel = new ProductPanel(itemService);
+                addModuleTab("Products", panel);
 
-        titleLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        16
-                )
-        );
+            } else if (moduleName.equals("Shops")) {
+                ShopPanel panel = new ShopPanel(shopService);
+                addModuleTab("Shops", panel);
 
-        titleLabel.setForeground(TEXT);
+            } else if (moduleName.equals("Price Entries")) {
+                try {
+                    PriceEntryPanel panel = new PriceEntryPanel(
+                            itemService,
+                            shopService,
+                            authService,
+                            currentUser
+                    );
+                    addModuleTab("Price Entries", panel);
 
-        JLabel descriptionLabel =
-                new JLabel(description);
-
-        descriptionLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        12
-                )
-        );
-
-        descriptionLabel.setForeground(MUTED);
-
-        textPanel.add(titleLabel);
-
-        textPanel.add(
-                Box.createVerticalStrut(5)
-        );
-
-        textPanel.add(descriptionLabel);
-
-        card.add(
-                textPanel,
-                BorderLayout.CENTER
-        );
-
-        // =========================
-        // CLICK + HOVER
-        // =========================
-
-        card.setCursor(
-                new Cursor(
-                        Cursor.HAND_CURSOR
-                )
-        );
-
-        card.addMouseListener(
-                new java.awt.event.MouseAdapter() {
-
-                    @Override
-                    public void mouseEntered(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        card.setBorder(
-                                BorderFactory.createCompoundBorder(
-                                        BorderFactory.createLineBorder(
-                                                PRIMARY
-                                        ),
-                                        new EmptyBorder(
-                                                16,
-                                                18,
-                                                16,
-                                                15
-                                        )
-                                )
-                        );
-                    }
-
-                    @Override
-                    public void mouseExited(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        card.setBorder(
-                                BorderFactory.createCompoundBorder(
-                                        BorderFactory.createLineBorder(
-                                                BORDER
-                                        ),
-                                        new EmptyBorder(
-                                                16,
-                                                18,
-                                                16,
-                                                15
-                                        )
-                                )
-                        );
-                    }
-
-                    @Override
-                    public void mouseClicked(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        // =========================
-                        // PRODUCTS
-                        // =========================
-
-                        if (moduleName.equals("Products")) {
-
-                            ProductPanel productPanel =
-                                    new ProductPanel(
-                                            itemService
-                                    );
-
-                            addModuleTab(
-                                    "Products",
-                                    productPanel
-                            );
-
-                            tabs.setSelectedComponent(
-                                    productPanel
-                            );
-                        }
-
-                        // =========================
-                        // SHOPS
-                        // =========================
-
-                        else if (
-                                moduleName.equals("Shops")
-                        ) {
-
-                            ShopPanel shopPanel =
-                                    new ShopPanel(
-                                            shopService
-                                    );
-
-                            addModuleTab(
-                                    "Shops",
-                                    shopPanel
-                            );
-
-                            tabs.setSelectedComponent(
-                                    shopPanel
-                            );
-                        }
-
-                        // =========================
-                        // OTHER MODULES
-                        // =========================
-
-                        else {
-
-                            showComingSoon(
-                                    moduleName
-                            );
-                        }
-                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(
+                            MainMenuFrame.this,
+                            "Could not open Price Entries:\n"
+                                    + ex.getMessage(),
+                            "PricePulse Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
                 }
-        );
 
-        return card;
-    }
+            } else {
+                showComingSoon(moduleName);
+            }
+        }
+    });
 
+    return card;
+}
     // =====================================================
     // LARGE ACTION CARD
     // =====================================================
