@@ -1,3 +1,4 @@
+
 package com.pricepulse.ui;
 
 import com.pricepulse.Shop;
@@ -10,26 +11,7 @@ import java.awt.*;
 
 public class ShopPanel extends JPanel {
 
-    // =========================
-    // COLORS
-    // =========================
-
-    private static final Color PRIMARY = new Color(37, 99, 235);
-    private static final Color BACKGROUND = new Color(248, 250, 252);
-    private static final Color CARD = Color.WHITE;
-    private static final Color TEXT = new Color(30, 41, 59);
-    private static final Color MUTED = new Color(100, 116, 139);
-    private static final Color BORDER = new Color(226, 232, 240);
-
-    // =========================
-    // BACKEND
-    // =========================
-
     private final ShopService shopService;
-
-    // =========================
-    // UI COMPONENTS
-    // =========================
 
     private JTextField nameField;
     private JTextField locationField;
@@ -39,505 +21,313 @@ public class ShopPanel extends JPanel {
 
     private int selectedShopId = -1;
 
-    // =========================
-    // CONSTRUCTOR
-    // =========================
+    private static final Color GREEN = new Color(32, 112, 81);
+    private static final Color DARK_GREEN = new Color(25, 67, 52);
+    private static final Color BACKGROUND = new Color(247, 250, 246);
+    private static final Color CREAM = new Color(250, 246, 230);
+    private static final Color TEXT = new Color(38, 59, 48);
+    private static final Color MUTED = new Color(108, 128, 115);
+    private static final Color BORDER = new Color(225, 235, 226);
+    private static final Color WHITE = Color.WHITE;
 
     public ShopPanel(ShopService shopService) {
-
         this.shopService = shopService;
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 12));
         setBackground(BACKGROUND);
-        setBorder(new EmptyBorder(25, 35, 30, 35));
+        setBorder(new EmptyBorder(20, 25, 20, 25));
 
-        add(createHeader(), BorderLayout.NORTH);
-        add(createMainContent(), BorderLayout.CENTER);
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildContent(), BorderLayout.CENTER);
 
         refreshTable();
     }
 
-    // =========================
     // HEADER
-    // =========================
-
-    private JPanel createHeader() {
-
+    private JPanel buildHeader() {
         JPanel header = new JPanel();
+        header.setOpaque(false);
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(BACKGROUND);
 
-        JLabel title = new JLabel("Shops");
-        title.setFont(new Font("Arial", Font.BOLD, 25));
-        title.setForeground(TEXT);
+        JLabel title = new JLabel("Shop Management");
+        title.setFont(new Font("SansSerif", Font.BOLD, 26));
+        title.setForeground(DARK_GREEN);
 
-        JLabel description = new JLabel(
-                "Add, edit and manage the shops used in PricePulse."
-        );
-        description.setFont(new Font("Arial", Font.PLAIN, 14));
-        description.setForeground(MUTED);
+        JLabel subtitle = new JLabel(
+                "Register and manage shops for price comparison.");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        subtitle.setForeground(MUTED);
 
         header.add(title);
-        header.add(Box.createVerticalStrut(5));
-        header.add(description);
-        header.add(Box.createVerticalStrut(20));
+        header.add(Box.createVerticalStrut(4));
+        header.add(subtitle);
 
         return header;
     }
 
-    // =========================
     // MAIN CONTENT
-    // =========================
+    private JPanel buildContent() {
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setOpaque(false);
 
-    private JPanel createMainContent() {
+        // Form and buttons stay together at the top.
+        content.add(buildForm(), BorderLayout.NORTH);
+        content.add(buildTable(), BorderLayout.CENTER);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(0, 18));
-        mainPanel.setBackground(BACKGROUND);
-
-        mainPanel.add(createFormPanel(), BorderLayout.NORTH);
-        mainPanel.add(createTablePanel(), BorderLayout.CENTER);
-
-        return mainPanel;
+        return content;
     }
 
-    // =========================
-    // FORM PANEL
-    // =========================
-
-    private JPanel createFormPanel() {
-
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(CARD);
-
-        card.setBorder(BorderFactory.createCompoundBorder(
+    // SHOP FORM
+    private JPanel buildForm() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(WHITE);
+        form.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(18, 20, 18, 20)
-        ));
+                new EmptyBorder(10, 12, 10, 12)));
 
-        // -------------------------
-        // FORM FIELDS
-        // -------------------------
-
-        JPanel fieldsPanel = new JPanel(new GridLayout(1, 2, 15, 0));
-        fieldsPanel.setBackground(CARD);
-
-        // Shop Name
-        JPanel namePanel = new JPanel();
-        namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.Y_AXIS));
-        namePanel.setBackground(CARD);
-
-        JLabel nameLabel = createLabel("Shop Name");
         nameField = new JTextField();
-
-        nameField.setFont(new Font("Arial", Font.PLAIN, 14));
-        nameField.setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, 35)
-        );
-
-        namePanel.add(nameLabel);
-        namePanel.add(Box.createVerticalStrut(6));
-        namePanel.add(nameField);
-
-        // Location
-        JPanel locationPanel = new JPanel();
-        locationPanel.setLayout(new BoxLayout(locationPanel, BoxLayout.Y_AXIS));
-        locationPanel.setBackground(CARD);
-
-        JLabel locationLabel = createLabel("Location");
         locationField = new JTextField();
 
-        locationField.setFont(new Font("Arial", Font.PLAIN, 14));
-        locationField.setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, 35)
-        );
+        nameField.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        locationField.setFont(new Font("SansSerif", Font.PLAIN, 13));
 
-        locationPanel.add(locationLabel);
-        locationPanel.add(Box.createVerticalStrut(6));
-        locationPanel.add(locationField);
+        styleTextField(nameField);
+        styleTextField(locationField);
 
-        fieldsPanel.add(namePanel);
-        fieldsPanel.add(locationPanel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 6, 4, 6);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
 
-        card.add(fieldsPanel, BorderLayout.CENTER);
+        // Shop name
+        addLabel(form, gbc, 0, 0, "Shop Name");
+        addInput(form, gbc, 0, 1, nameField);
 
-        // -------------------------
-        // BUTTONS
-        // -------------------------
+        // Location
+        addLabel(form, gbc, 1, 0, "Location");
+        addInput(form, gbc, 1, 1, locationField);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(
-                FlowLayout.LEFT,
-                10,
-                15
-        ));
+        // ACTION BUTTONS — always directly below fields
+        JPanel buttons = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 8, 3));
+        buttons.setOpaque(false);
 
-        buttonPanel.setBackground(CARD);
-
-        JButton addButton = createButton(
-                "Add Shop",
-                PRIMARY
-        );
-
-        JButton updateButton = createButton(
-                "Update",
-                new Color(71, 85, 105)
-        );
-
-        JButton deleteButton = createButton(
-                "Delete",
-                new Color(220, 38, 38)
-        );
-
-        JButton clearButton = createButton(
-                "Clear",
-                new Color(100, 116, 139)
-        );
+        JButton addButton = createButton("Register Shop");
+        JButton updateButton = createButton("Update");
+        JButton deleteButton = createButton("Delete");
+        JButton clearButton = createButton("Clear");
 
         addButton.addActionListener(e -> addShop());
         updateButton.addActionListener(e -> updateShop());
         deleteButton.addActionListener(e -> deleteShop());
         clearButton.addActionListener(e -> clearForm());
 
-        buttonPanel.add(addButton);
-        buttonPanel.add(updateButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(clearButton);
+        buttons.add(addButton);
+        buttons.add(updateButton);
+        buttons.add(deleteButton);
+        buttons.add(clearButton);
 
-        card.add(buttonPanel, BorderLayout.SOUTH);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+        gbc.insets = new Insets(5, 4, 0, 4);
 
-        return card;
+        form.add(buttons, gbc);
+
+        return form;
     }
 
-    // =========================
-    // TABLE PANEL
-    // =========================
+    private void addLabel(
+            JPanel panel,
+            GridBagConstraints gbc,
+            int column,
+            int row,
+            String text) {
 
-    private JPanel createTablePanel() {
+        gbc.gridx = column;
+        gbc.gridy = row;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
 
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(CARD);
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("SansSerif", Font.BOLD, 12));
+        label.setForeground(TEXT);
 
-        card.setBorder(BorderFactory.createCompoundBorder(
+        panel.add(label, gbc);
+    }
+
+    private void addInput(
+            JPanel panel,
+            GridBagConstraints gbc,
+            int column,
+            int row,
+            JTextField field) {
+
+        gbc.gridx = column;
+        gbc.gridy = row;
+        gbc.gridwidth = 1;
+        gbc.weightx = 1;
+
+        panel.add(field, gbc);
+    }
+
+    private void styleTextField(JTextField field) {
+        field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(15, 15, 15, 15)
-        ));
+                new EmptyBorder(7, 8, 7, 8)));
+    }
 
-        JLabel tableTitle = new JLabel("Shop List");
-        tableTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        tableTitle.setForeground(TEXT);
+    // REGISTERED SHOPS TABLE
+    private JPanel buildTable() {
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.setOpaque(false);
 
-        tableTitle.setBorder(
-                new EmptyBorder(0, 0, 12, 0)
-        );
+        JLabel title = new JLabel("Registered Shops");
+        title.setFont(new Font("SansSerif", Font.BOLD, 17));
+        title.setForeground(TEXT);
 
-        card.add(tableTitle, BorderLayout.NORTH);
-
-        // -------------------------
-        // TABLE
-        // -------------------------
-
-        String[] columns = {
-                "ID",
-                "Shop Name",
-                "Location"
-        };
-
-        tableModel = new DefaultTableModel(columns, 0) {
+        tableModel = new DefaultTableModel(
+                new String[]{"ID", "Shop Name", "Location"}, 0) {
 
             @Override
-            public boolean isCellEditable(
-                    int row,
-                    int column
-            ) {
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
         shopTable = new JTable(tableModel);
-
-        shopTable.setFont(
-                new Font("Arial", Font.PLAIN, 13)
-        );
-
-        shopTable.setRowHeight(30);
+        shopTable.setRowHeight(28);
+        shopTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        shopTable.setSelectionBackground(new Color(222, 241, 226));
+        shopTable.setSelectionForeground(TEXT);
+        shopTable.setGridColor(BORDER);
+        shopTable.setShowVerticalLines(false);
 
         shopTable.getTableHeader().setFont(
-                new Font("Arial", Font.BOLD, 13)
-        );
+                new Font("SansSerif", Font.BOLD, 13));
+        shopTable.getTableHeader().setBackground(CREAM);
+        shopTable.getTableHeader().setForeground(DARK_GREEN);
+        shopTable.getTableHeader().setReorderingAllowed(false);
 
-        shopTable.getTableHeader().setBackground(
-                new Color(241, 245, 249)
-        );
+        shopTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                loadSelectedShop();
+            }
+        });
 
-        shopTable.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
-        );
+        JScrollPane scrollPane = new JScrollPane(shopTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
+        scrollPane.getViewport().setBackground(WHITE);
 
-        // When user selects a shop
-        shopTable.getSelectionModel()
-                .addListSelectionListener(e -> {
+        panel.add(title, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-                    if (!e.getValueIsAdjusting()) {
-                        selectShop();
-                    }
-                });
-
-        JScrollPane scrollPane =
-                new JScrollPane(shopTable);
-
-        scrollPane.setBorder(null);
-
-        card.add(
-                scrollPane,
-                BorderLayout.CENTER
-        );
-
-        return card;
+        return panel;
     }
 
-    // =========================
-    // ADD SHOP
-    // =========================
-
+    // CREATE
     private void addShop() {
-
         String name = nameField.getText().trim();
         String location = locationField.getText().trim();
 
-        // Validation
-        if (name.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop name is required.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            nameField.requestFocus();
+        if (name.isEmpty() || location.isEmpty()) {
+            showMessage("Enter both the shop name and location.");
             return;
         }
 
-        if (location.isEmpty()) {
+        Shop shop = new Shop(name, location);
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop location is required.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            locationField.requestFocus();
-            return;
-        }
-
-        // Create Shop object
-        Shop shop = new Shop(
-                name,
-                location
-        );
-
-        // Send to backend
-        boolean success =
-                shopService.addShop(shop);
-
-        if (success) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop added successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (shopService.addShop(shop)) {
             refreshTable();
-
+            clearForm();
+            showMessage("Shop registered successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not add shop.\n"
-                            + "A shop with this name may already exist.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage(
+                    "Shop could not be registered. "
+                    + "Check the details and avoid duplicate names.");
         }
     }
 
-    // =========================
-    // UPDATE SHOP
-    // =========================
-
+    // UPDATE
     private void updateShop() {
-
         if (selectedShopId == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a shop from the table first.",
-                    "No Shop Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+            showMessage("Select a shop from the table first.");
             return;
         }
 
         String name = nameField.getText().trim();
         String location = locationField.getText().trim();
 
-        if (name.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop name is required.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            return;
-        }
-
-        if (location.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop location is required.",
-                    "Validation Error",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+        if (name.isEmpty() || location.isEmpty()) {
+            showMessage("Enter both the shop name and location.");
             return;
         }
 
         Shop updatedShop = new Shop(
-                selectedShopId,
-                name,
-                location
-        );
+                selectedShopId, name, location);
 
-        boolean success =
-                shopService.updateShop(updatedShop);
-
-        if (success) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop updated successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (shopService.updateShop(updatedShop)) {
             refreshTable();
-
+            clearForm();
+            showMessage("Shop updated successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not update shop.\n"
-                            + "Another shop may already have this name.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage(
+                    "Update failed. Check the details and "
+                    + "make sure the shop name is unique.");
         }
     }
 
-    // =========================
-    // DELETE SHOP
-    // =========================
-
+    // DELETE
     private void deleteShop() {
-
         if (selectedShopId == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a shop from the table first.",
-                    "No Shop Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+            showMessage("Select a shop from the table first.");
             return;
         }
 
-        int result = JOptionPane.showConfirmDialog(
+        int choice = JOptionPane.showConfirmDialog(
                 this,
-                "Are you sure you want to delete this shop?",
-                "Confirm Delete",
+                "Delete the selected shop?",
+                "Confirm Deletion",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
-        );
+                JOptionPane.WARNING_MESSAGE);
 
-        if (result != JOptionPane.YES_OPTION) {
+        if (choice != JOptionPane.YES_OPTION) {
             return;
         }
 
-        boolean success =
-                shopService.deleteShop(selectedShopId);
-
-        if (success) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Shop deleted successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (shopService.deleteShop(selectedShopId)) {
             refreshTable();
-
+            clearForm();
+            showMessage("Shop deleted successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not delete shop.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage("Could not delete the shop.");
         }
     }
 
-    // =========================
-    // SELECT SHOP
-    // =========================
-
-    private void selectShop() {
-
+    // LOAD SELECTED SHOP INTO THE FORM
+    private void loadSelectedShop() {
         int row = shopTable.getSelectedRow();
 
         if (row == -1) {
             return;
         }
 
-        selectedShopId =
-                (int) tableModel.getValueAt(row, 0);
+        selectedShopId = Integer.parseInt(
+                tableModel.getValueAt(row, 0).toString());
 
-        String name =
-                tableModel.getValueAt(row, 1).toString();
+        nameField.setText(
+                tableModel.getValueAt(row, 1).toString());
 
-        String location =
-                tableModel.getValueAt(row, 2).toString();
-
-        nameField.setText(name);
-        locationField.setText(location);
+        locationField.setText(
+                tableModel.getValueAt(row, 2).toString());
     }
 
-    // =========================
     // REFRESH TABLE
-    // =========================
-
     private void refreshTable() {
-
-        if (tableModel == null) {
-            return;
-        }
-
         tableModel.setRowCount(0);
 
-        for (Shop shop :
-                shopService.getAllShops()) {
-
+        for (Shop shop : shopService.getAllShops()) {
             tableModel.addRow(new Object[]{
                     shop.getId(),
                     shop.getName(),
@@ -546,70 +336,36 @@ public class ShopPanel extends JPanel {
         }
     }
 
-    // =========================
     // CLEAR FORM
-    // =========================
-
     private void clearForm() {
-
-        selectedShopId = -1;
-
         nameField.setText("");
         locationField.setText("");
-
-        if (shopTable != null) {
-            shopTable.clearSelection();
-        }
-
-        nameField.requestFocus();
+        selectedShopId = -1;
+        shopTable.clearSelection();
     }
 
-    // =========================
-    // LABEL
-    // =========================
-
-    private JLabel createLabel(String text) {
-
-        JLabel label = new JLabel(text);
-
-        label.setFont(
-                new Font("Arial", Font.BOLD, 13)
-        );
-
-        label.setForeground(TEXT);
-
-        return label;
-    }
-
-    // =========================
-    // BUTTON
-    // =========================
-
-    private JButton createButton(
-            String text,
-            Color color
-    ) {
-
+    // BUTTON STYLE
+    private JButton createButton(String text) {
         JButton button = new JButton(text);
 
-        button.setFont(
-                new Font("Arial", Font.BOLD, 13)
-        );
-
-        button.setForeground(Color.WHITE);
-        button.setBackground(color);
-
+        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setForeground(WHITE);
+        button.setBackground(GREEN);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-
-        button.setCursor(
-                new Cursor(Cursor.HAND_CURSOR)
-        );
-
-        button.setBorder(
-                new EmptyBorder(9, 18, 9, 18)
-        );
+        button.setBorder(new EmptyBorder(8, 12, 8, 12));
+        button.setCursor(Cursor.getPredefinedCursor(
+                Cursor.HAND_CURSOR));
 
         return button;
+    }
+
+    // MESSAGE DIALOG
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                "PricePulse",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }
