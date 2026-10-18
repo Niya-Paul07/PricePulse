@@ -1,211 +1,197 @@
+
 package com.pricepulse.ui;
 
 import com.pricepulse.Item;
 import com.pricepulse.ItemService;
+import com.pricepulse.Shop;
+import com.pricepulse.ShopService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class ProductPanel extends JPanel {
 
-    private static final Color PRIMARY = new Color(37, 99, 235);
-    private static final Color BACKGROUND = new Color(248, 250, 252);
-    private static final Color CARD = Color.WHITE;
-    private static final Color TEXT = new Color(30, 41, 59);
-    private static final Color MUTED = new Color(100, 116, 139);
-    private static final Color BORDER = new Color(226, 232, 240);
-
     private final ItemService itemService;
+    private final ShopService shopService;
 
-    private JTextField nameField;
+    private JComboBox<String> nameCombo;
+    private JTextField priceField;
+
     private JComboBox<String> categoryCombo;
-    private JTextField unitField;
+    private JComboBox<String> unitCombo;
+    private JComboBox<String> shopCombo;
 
     private JTable productTable;
     private DefaultTableModel tableModel;
 
     private int selectedItemId = -1;
 
-    private final String[] categories = {
-            "Grocery",
-            "Fruits",
-            "Vegetables",
-            "Dairy",
-            "Beverages",
-            "Snacks",
-            "Personal Care",
-            "Household"
-    };
+    private static final Color GREEN = new Color(32, 112, 81);
+    private static final Color DARK_GREEN = new Color(25, 67, 52);
+    private static final Color BACKGROUND = new Color(247, 250, 246);
+    private static final Color CREAM = new Color(250, 246, 230);
+    private static final Color TEXT = new Color(38, 59, 48);
+    private static final Color MUTED = new Color(108, 128, 115);
+    private static final Color BORDER = new Color(225, 235, 226);
+    private static final Color WHITE = Color.WHITE;
 
-    public ProductPanel(ItemService itemService) {
-
+    public ProductPanel(ItemService itemService, ShopService shopService) {
         this.itemService = itemService;
+        this.shopService = shopService;
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 18));
         setBackground(BACKGROUND);
-        setBorder(new EmptyBorder(25, 35, 30, 35));
+        setBorder(new EmptyBorder(25, 30, 25, 30));
 
-        add(createHeader(), BorderLayout.NORTH);
-        add(createMainContent(), BorderLayout.CENTER);
+        add(buildHeader(), BorderLayout.NORTH);
+        add(buildContent(), BorderLayout.CENTER);
 
+        refreshShops();
+        refreshProductNames();
         refreshTable();
     }
 
-    // ---------------------------------------------------------
-    // HEADER
-    // ---------------------------------------------------------
-
-    private JPanel createHeader() {
-
+    private JPanel buildHeader() {
         JPanel header = new JPanel();
+        header.setOpaque(false);
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(BACKGROUND);
 
-        JLabel title = new JLabel("Products");
-        title.setFont(new Font("Arial", Font.BOLD, 25));
-        title.setForeground(TEXT);
+        JLabel title = new JLabel("Product Management");
+        title.setFont(new Font("SansSerif", Font.BOLD, 26));
+        title.setForeground(DARK_GREEN);
 
-        JLabel description = new JLabel(
-                "Add, edit and manage the products used in PricePulse."
-        );
-        description.setFont(new Font("Arial", Font.PLAIN, 14));
-        description.setForeground(MUTED);
+        JLabel subtitle = new JLabel(
+                "Add products and track their prices at registered shops.");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        subtitle.setForeground(MUTED);
 
         header.add(title);
-        header.add(Box.createVerticalStrut(5));
-        header.add(description);
-        header.add(Box.createVerticalStrut(20));
+        header.add(Box.createVerticalStrut(6));
+        header.add(subtitle);
 
         return header;
     }
 
-    // ---------------------------------------------------------
-    // MAIN CONTENT
-    // ---------------------------------------------------------
-
-    private JPanel createMainContent() {
-
-        JPanel main = new JPanel();
-        main.setLayout(new BorderLayout(0, 20));
-        main.setBackground(BACKGROUND);
-
-        main.add(createFormPanel(), BorderLayout.NORTH);
-        main.add(createTablePanel(), BorderLayout.CENTER);
-
-        return main;
+    private JPanel buildContent() {
+        JPanel content = new JPanel(new BorderLayout(0, 18));
+        content.setOpaque(false);
+        content.add(buildForm(), BorderLayout.NORTH);
+        content.add(buildTable(), BorderLayout.CENTER);
+        return content;
     }
 
-    // ---------------------------------------------------------
-    // FORM
-    // ---------------------------------------------------------
-
-    private JPanel createFormPanel() {
-
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(CARD);
-        card.setBorder(BorderFactory.createCompoundBorder(
+    private JPanel buildForm() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(WHITE);
+        form.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(18, 20, 18, 20)
-        ));
+                new EmptyBorder(15, 15, 15, 15)));
 
-        JPanel fields = new JPanel(new GridBagLayout());
-        fields.setBackground(CARD);
+        // Editable dropdown: select an existing product or type a new one.
+        nameCombo = new JComboBox<>();
+        nameCombo.setEditable(true);
+        nameCombo.setMaximumRowCount(8);
+
+        priceField = new JTextField(12);
+
+        categoryCombo = new JComboBox<>(new String[]{
+                "Groceries", "Fruits & Vegetables", "Dairy",
+                "Beverages", "Personal Care", "Household",
+                "Electronics", "Other"
+        });
+
+        unitCombo = new JComboBox<>(new String[]{
+                "Piece", "Kg", "Gram", "Litre", "Ml",
+                "Packet", "Bottle", "Dozen", "Box", "Pack"
+        });
+
+        shopCombo = new JComboBox<>();
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 12);
+        gbc.insets = new Insets(6, 7, 6, 7);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel nameLabel = createLabel("Product Name");
-        JLabel categoryLabel = createLabel("Category");
-        JLabel unitLabel = createLabel("Unit");
-
-        nameField = new JTextField();
-        nameField.setPreferredSize(new Dimension(180, 35));
-
-        categoryCombo = new JComboBox<>(categories);
-        categoryCombo.setPreferredSize(new Dimension(180, 35));
-
-        unitField = new JTextField();
-        unitField.setPreferredSize(new Dimension(180, 35));
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        fields.add(nameLabel, gbc);
-
-        gbc.gridx = 1;
         gbc.weightx = 1;
-        fields.add(nameField, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        fields.add(categoryLabel, gbc);
+        addField(form, gbc, 0, 0, "Product Name", nameCombo);
+        addField(form, gbc, 1, 0, "Category", categoryCombo);
+        addField(form, gbc, 0, 2, "Unit", unitCombo);
+        addField(form, gbc, 1, 2, "Registered Shop", shopCombo);
+        addField(form, gbc, 0, 4, "Price (₹)", priceField);
 
-        gbc.gridx = 3;
-        gbc.weightx = 1;
-        fields.add(categoryCombo, gbc);
-
-        gbc.gridx = 4;
-        gbc.weightx = 0;
-        fields.add(unitLabel, gbc);
-
-        gbc.gridx = 5;
-        gbc.weightx = 1;
-        fields.add(unitField, gbc);
-
-        card.add(fields, BorderLayout.CENTER);
-
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        buttons.setBackground(CARD);
-
-        JButton addButton = createButton("Add Product", PRIMARY);
-        JButton updateButton = createButton("Update", new Color(16, 185, 129));
-        JButton deleteButton = createButton("Delete", new Color(220, 38, 38));
-        JButton clearButton = createButton("Clear", MUTED);
+        JButton addButton = createButton("Add Product");
+        JButton updateButton = createButton("Update");
+        JButton deleteButton = createButton("Delete");
+        JButton clearButton = createButton("Clear");
+        JButton refreshShopsButton = createButton("Refresh Shops");
 
         addButton.addActionListener(e -> addProduct());
         updateButton.addActionListener(e -> updateProduct());
         deleteButton.addActionListener(e -> deleteProduct());
         clearButton.addActionListener(e -> clearForm());
+        refreshShopsButton.addActionListener(e -> {
+            refreshShops();
+            refreshProductNames();
+        });
 
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 7, 4));
+        buttons.setOpaque(false);
         buttons.add(addButton);
         buttons.add(updateButton);
         buttons.add(deleteButton);
         buttons.add(clearButton);
+        buttons.add(refreshShopsButton);
 
-        card.add(buttons, BorderLayout.SOUTH);
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        form.add(buttons, gbc);
 
-        return card;
+        return form;
     }
 
-    // ---------------------------------------------------------
-    // TABLE
-    // ---------------------------------------------------------
+    private void addField(JPanel panel, GridBagConstraints gbc,
+                          int column, int labelRow,
+                          String labelText, JComponent field) {
+        gbc.gridx = column;
+        gbc.gridy = labelRow;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
 
-    private JPanel createTablePanel() {
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("SansSerif", Font.BOLD, 12));
+        label.setForeground(TEXT);
+        panel.add(label, gbc);
 
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(CARD);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(15, 15, 15, 15)
-        ));
+        gbc.gridy = labelRow + 1;
+        gbc.weightx = 1;
 
-        JLabel tableTitle = new JLabel("Product List");
-        tableTitle.setFont(new Font("Arial", Font.BOLD, 17));
-        tableTitle.setForeground(TEXT);
+        field.setFont(new Font("SansSerif", Font.PLAIN, 13));
 
-        tableTitle.setBorder(new EmptyBorder(0, 0, 12, 0));
+        if (field instanceof JTextField) {
+            field.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    new EmptyBorder(7, 8, 7, 8)));
+        }
 
-        panel.add(tableTitle, BorderLayout.NORTH);
+        panel.add(field, gbc);
+    }
+
+    private JPanel buildTable() {
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setOpaque(false);
+
+        JLabel title = new JLabel("Products");
+        title.setFont(new Font("SansSerif", Font.BOLD, 17));
+        title.setForeground(TEXT);
 
         tableModel = new DefaultTableModel(
-                new Object[]{"ID", "Product Name", "Category", "Unit"},
-                0
-        ) {
+                new String[]{"ID", "Product", "Category",
+                    "Unit", "Shop", "Price (₹)"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -213,313 +199,272 @@ public class ProductPanel extends JPanel {
         };
 
         productTable = new JTable(tableModel);
-
-        productTable.setRowHeight(30);
-        productTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        productTable.setRowHeight(29);
+        productTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        productTable.setSelectionBackground(new Color(222, 241, 226));
+        productTable.setSelectionForeground(TEXT);
+        productTable.setGridColor(BORDER);
+        productTable.setShowVerticalLines(false);
         productTable.getTableHeader().setFont(
-                new Font("Arial", Font.BOLD, 13)
-        );
-
-        productTable.getTableHeader().setBackground(
-                new Color(241, 245, 249)
-        );
-
-        productTable.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
-        );
-
-        productTable.getColumnModel()
-                .getColumn(0)
-                .setPreferredWidth(50);
-
-        productTable.getColumnModel()
-                .getColumn(1)
-                .setPreferredWidth(200);
-
-        productTable.getColumnModel()
-                .getColumn(2)
-                .setPreferredWidth(150);
-
-        productTable.getColumnModel()
-                .getColumn(3)
-                .setPreferredWidth(120);
+                new Font("SansSerif", Font.BOLD, 12));
+        productTable.getTableHeader().setBackground(CREAM);
+        productTable.getTableHeader().setForeground(DARK_GREEN);
+        productTable.getTableHeader().setReorderingAllowed(false);
 
         productTable.getSelectionModel().addListSelectionListener(e -> {
-
             if (!e.getValueIsAdjusting()) {
-                selectProduct();
+                loadSelectedProduct();
             }
         });
 
-        JScrollPane scrollPane = new JScrollPane(productTable);
-        scrollPane.setBorder(null);
+        JScrollPane scroll = new JScrollPane(productTable);
+        scroll.setBorder(BorderFactory.createLineBorder(BORDER));
+        scroll.getViewport().setBackground(WHITE);
 
-        panel.add(scrollPane, BorderLayout.CENTER);
-
+        panel.add(title, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
 
-    // ---------------------------------------------------------
-    // ADD PRODUCT
-    // ---------------------------------------------------------
-
     private void addProduct() {
-
-        String name = nameField.getText().trim();
-        String category = (String) categoryCombo.getSelectedItem();
-        String unit = unitField.getText().trim();
-
-        if (name.isEmpty() || unit.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Product name and unit are required.",
-                    "Validation",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+        if (!validateForm()) {
             return;
         }
 
-        Item item = new Item(name, category, unit);
+        String name = getProductName();
+        String category = (String) categoryCombo.getSelectedItem();
+        String unit = (String) unitCombo.getSelectedItem();
+        String shop = (String) shopCombo.getSelectedItem();
+        double price = readPrice();
 
-        boolean success = itemService.addItem(item);
+        // Reuse the existing spelling when a product already exists.
+        name = findExistingProductName(name);
 
-        if (success) {
+        Item item = new Item(name, category, unit, price, shop);
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Product added successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (itemService.addItem(item)) {
             refreshTable();
-
+            refreshProductNames();
+            clearForm();
+            showMessage("Product price added successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not add product.\n" +
-                    "The product name may already exist.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage(
+                    "Could not add product. This product may already "
+                    + "have a price entry for this shop.");
         }
     }
-
-    // ---------------------------------------------------------
-    // UPDATE PRODUCT
-    // ---------------------------------------------------------
 
     private void updateProduct() {
-
         if (selectedItemId == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a product from the table first.",
-                    "Update Product",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+            showMessage("Please select a product from the table.");
             return;
         }
 
-        String name = nameField.getText().trim();
-        String category = (String) categoryCombo.getSelectedItem();
-        String unit = unitField.getText().trim();
-
-        if (name.isEmpty() || unit.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Product name and unit are required.",
-                    "Validation",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+        if (!validateForm()) {
             return;
         }
 
-        Item updatedItem =
-                new Item(selectedItemId, name, category, unit);
+        String name = findExistingProductName(getProductName());
 
-        boolean success = itemService.updateItem(updatedItem);
+        Item updatedItem = new Item(
+                selectedItemId,
+                name,
+                (String) categoryCombo.getSelectedItem(),
+                (String) unitCombo.getSelectedItem(),
+                readPrice(),
+                (String) shopCombo.getSelectedItem());
 
-        if (success) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Product updated successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (itemService.updateItem(updatedItem)) {
             refreshTable();
-
+            refreshProductNames();
+            clearForm();
+            showMessage("Product updated successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not update product.\n" +
-                    "The product name may already exist.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage("Could not update product. Check the details.");
         }
     }
 
-    // ---------------------------------------------------------
-    // DELETE PRODUCT
-    // ---------------------------------------------------------
-
     private void deleteProduct() {
-
         if (selectedItemId == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a product from the table first.",
-                    "Delete Product",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
+            showMessage("Please select a product to delete.");
             return;
         }
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Are you sure you want to delete this product?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION
-        );
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
         if (choice != JOptionPane.YES_OPTION) {
             return;
         }
 
-        boolean success =
-                itemService.deleteItem(selectedItemId);
-
-        if (success) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Product deleted successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            clearForm();
+        if (itemService.deleteItem(selectedItemId)) {
             refreshTable();
-
+            refreshProductNames();
+            clearForm();
+            showMessage("Product deleted successfully!");
         } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not delete product.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            showMessage("Could not delete product.");
         }
     }
 
-    // ---------------------------------------------------------
-    // SELECT PRODUCT FROM TABLE
-    // ---------------------------------------------------------
+    private boolean validateForm() {
+        String name = getProductName();
 
-    private void selectProduct() {
+        if (name.isEmpty()) {
+            showMessage("Please select or enter a product name.");
+            nameCombo.requestFocusInWindow();
+            return false;
+        }
 
+        if (shopCombo.getSelectedItem() == null
+                || shopCombo.getSelectedItem().toString().isEmpty()) {
+            showMessage("Please register a shop first, then select it.");
+            return false;
+        }
+
+        try {
+            double price = readPrice();
+
+            if (!Double.isFinite(price) || price < 0) {
+                showMessage("Price must be a valid non-negative number.");
+                return false;
+            }
+        } catch (NumberFormatException ex) {
+            showMessage("Please enter a valid price.");
+            priceField.requestFocusInWindow();
+            return false;
+        }
+
+        return true;
+    }
+
+    private String getProductName() {
+        Object selected = nameCombo.getEditor().getItem();
+        return selected == null ? "" : selected.toString().trim();
+    }
+
+    private String findExistingProductName(String enteredName) {
+        for (Item item : itemService.getAllItems()) {
+            if (item.getName().trim().equalsIgnoreCase(enteredName.trim())) {
+                return item.getName();
+            }
+        }
+        return enteredName.trim();
+    }
+
+    private void refreshProductNames() {
+        String currentName = getProductName();
+
+        Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Item item : itemService.getAllItems()) {
+            if (item.getName() != null && !item.getName().trim().isEmpty()) {
+                names.add(item.getName().trim());
+            }
+        }
+
+        nameCombo.removeAllItems();
+        for (String name : names) {
+            nameCombo.addItem(name);
+        }
+
+        nameCombo.setSelectedItem(currentName);
+        nameCombo.setEditable(true);
+    }
+
+    private double readPrice() {
+        return Double.parseDouble(priceField.getText().trim());
+    }
+
+    private void loadSelectedProduct() {
         int row = productTable.getSelectedRow();
-
         if (row == -1) {
             return;
         }
 
-        selectedItemId =
-                (int) tableModel.getValueAt(row, 0);
+        selectedItemId = Integer.parseInt(
+                tableModel.getValueAt(row, 0).toString());
 
-        nameField.setText(
-                tableModel.getValueAt(row, 1).toString()
-        );
+        nameCombo.setSelectedItem(tableModel.getValueAt(row, 1).toString());
+        categoryCombo.setSelectedItem(tableModel.getValueAt(row, 2).toString());
+        unitCombo.setSelectedItem(tableModel.getValueAt(row, 3).toString());
 
-        categoryCombo.setSelectedItem(
-                tableModel.getValueAt(row, 2).toString()
-        );
-
-        unitField.setText(
-                tableModel.getValueAt(row, 3).toString()
-        );
+        selectShop(tableModel.getValueAt(row, 4).toString());
+        priceField.setText(tableModel.getValueAt(row, 5).toString());
     }
 
-    // ---------------------------------------------------------
-    // REFRESH TABLE
-    // ---------------------------------------------------------
-
-    private void refreshTable() {
-
-        if (tableModel == null) {
-            return;
+    private void selectShop(String shopName) {
+        for (int i = 0; i < shopCombo.getItemCount(); i++) {
+            if (shopCombo.getItemAt(i).equals(shopName)) {
+                shopCombo.setSelectedIndex(i);
+                return;
+            }
         }
 
+        shopCombo.addItem(shopName);
+        shopCombo.setSelectedItem(shopName);
+    }
+
+    private void refreshShops() {
+        String previousSelection = (String) shopCombo.getSelectedItem();
+        shopCombo.removeAllItems();
+
+        for (Shop shop : shopService.getAllShops()) {
+            shopCombo.addItem(shop.getName());
+        }
+
+        if (previousSelection != null) {
+            shopCombo.setSelectedItem(previousSelection);
+        }
+    }
+
+    private void refreshTable() {
         tableModel.setRowCount(0);
 
-        List<Item> items =
-                itemService.getAllItems();
-
-        for (Item item : items) {
-
+        for (Item item : itemService.getAllItems()) {
             tableModel.addRow(new Object[]{
                     item.getId(),
                     item.getName(),
                     item.getCategory(),
-                    item.getUnit()
+                    item.getUnit(),
+                    item.getShopName(),
+                    item.getPrice()
             });
         }
     }
 
-    // ---------------------------------------------------------
-    // CLEAR FORM
-    // ---------------------------------------------------------
-
     private void clearForm() {
-
+        nameCombo.setSelectedItem("");
+        priceField.setText("");
         selectedItemId = -1;
 
-        nameField.setText("");
-        categoryCombo.setSelectedIndex(0);
-        unitField.setText("");
+        if (productTable != null) {
+            productTable.clearSelection();
+        }
 
-        productTable.clearSelection();
+        if (shopCombo.getItemCount() > 0) {
+            shopCombo.setSelectedIndex(0);
+        }
     }
 
-    // ---------------------------------------------------------
-    // UI HELPERS
-    // ---------------------------------------------------------
-
-    private JLabel createLabel(String text) {
-
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", Font.BOLD, 13));
-        label.setForeground(TEXT);
-
-        return label;
-    }
-
-    private JButton createButton(String text, Color color) {
-
+    private JButton createButton(String text) {
         JButton button = new JButton(text);
-
-        button.setFont(new Font("Arial", Font.BOLD, 13));
-        button.setForeground(Color.WHITE);
-        button.setBackground(color);
+        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setForeground(WHITE);
+        button.setBackground(GREEN);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
+        button.setBorder(new EmptyBorder(8, 11, 8, 11));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return button;
+    }
+
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(
+                this, message, "PricePulse",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }

@@ -1,6 +1,6 @@
+
 package com.pricepulse.ui;
 
-import com.pricepulse.auth.AuthService;
 import com.pricepulse.ItemService;
 import com.pricepulse.ShopService;
 import com.pricepulse.model.User;
@@ -8,853 +8,433 @@ import com.pricepulse.model.User;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class MainMenuFrame extends JFrame {
 
-    // =========================
-    // TABS
-    // =========================
-
     private final JTabbedPane tabs = new JTabbedPane();
 
-    // =========================
-    // SERVICES
-    // =========================
-    
+    // Shared services used by all modules
     private final ItemService itemService = new ItemService();
     private final ShopService shopService = new ShopService();
 
-    private final AuthService authService;
-    private final User currentUser;
+    // PricePulse colour palette
+    private static final Color GREEN = new Color(32, 112, 81);
+    private static final Color DARK_GREEN = new Color(25, 67, 52);
+    private static final Color BACKGROUND = new Color(247, 250, 246);
+    private static final Color MINT = new Color(222, 241, 226);
+    private static final Color CREAM = new Color(250, 246, 230);
+    private static final Color TEXT = new Color(38, 59, 48);
+    private static final Color MUTED = new Color(108, 128, 115);
+    private static final Color BORDER = new Color(225, 235, 226);
+    private static final Color WHITE = Color.WHITE;
 
-    // =========================
-    // COLORS
-    // =========================
+    public MainMenuFrame(User user) {
+        super("PricePulse | Smart Price Tracking");
 
-    private static final Color PRIMARY =
-            new Color(37, 99, 235);
-
-    private static final Color BACKGROUND =
-            new Color(248, 250, 252);
-
-    private static final Color CARD =
-            Color.WHITE;
-
-    private static final Color TEXT =
-            new Color(30, 41, 59);
-
-    private static final Color MUTED =
-            new Color(100, 116, 139);
-
-    private static final Color BORDER =
-            new Color(226, 232, 240);
-
-    // =========================
-    // CONSTRUCTOR
-    // =========================
-
-    public MainMenuFrame(User user, AuthService authService) {
-
-        super("PricePulse");
-
-        this.authService = authService;
-        this.currentUser = user;
-
-
-        setDefaultCloseOperation(
-                JFrame.EXIT_ON_CLOSE
-        );
-
-        setSize(1000, 680);
-
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1100, 740);
+        setMinimumSize(new Dimension(850, 600));
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        tabs.setFont(
-                new Font("Arial", Font.PLAIN, 14)
-        );
+        getContentPane().setBackground(BACKGROUND);
 
-        tabs.setBackground(Color.WHITE);
+        tabs.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        tabs.setBackground(WHITE);
+        tabs.setForeground(TEXT);
 
-        // =========================
-        // DASHBOARD
-        // =========================
+        tabs.addTab("  Home  ", buildDashboard(user));
 
-        JPanel dashboard = new JPanel();
+        add(tabs, BorderLayout.CENTER);
+    }
 
-        dashboard.setLayout(
-                new BoxLayout(
-                        dashboard,
-                        BoxLayout.Y_AXIS
-                )
-        );
+    // DASHBOARD
+    private JPanel buildDashboard(User user) {
 
-        dashboard.setBackground(BACKGROUND);
+        JPanel page = new JPanel(new BorderLayout());
+        page.setBackground(BACKGROUND);
 
-        dashboard.setBorder(
-                new EmptyBorder(
-                        25,
-                        35,
-                        30,
-                        35
-                )
-        );
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(BACKGROUND);
+        content.setBorder(new EmptyBorder(25, 30, 30, 30));
 
-        // =========================
         // HEADER
-        // =========================
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
+        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
 
-        JPanel header =
-                new JPanel(new BorderLayout());
+        JPanel brand = new JPanel();
+        brand.setOpaque(false);
+        brand.setLayout(new BoxLayout(brand, BoxLayout.Y_AXIS));
 
-        header.setBackground(CARD);
+        JLabel logo = new JLabel("PricePulse");
+        logo.setFont(new Font("SansSerif", Font.BOLD, 28));
+        logo.setForeground(DARK_GREEN);
 
-        header.setBorder(
-                new EmptyBorder(
-                        18,
-                        22,
-                        18,
-                        22
-                )
-        );
-
-        header.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        90
-                )
-        );
-
-        header.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        // =========================
-        // BRAND
-        // =========================
-
-        JPanel brandPanel = new JPanel();
-
-        brandPanel.setLayout(
-                new BoxLayout(
-                        brandPanel,
-                        BoxLayout.Y_AXIS
-                )
-        );
-
-        brandPanel.setBackground(CARD);
-
-        JLabel logo =
-                new JLabel("PricePulse");
-
-        logo.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        25
-                )
-        );
-
-        logo.setForeground(PRIMARY);
-
-        JLabel tagline =
-                new JLabel("Smart Price Tracking");
-
-        tagline.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        13
-                )
-        );
-
+        JLabel tagline = new JLabel("Better prices. Smarter choices.");
+        tagline.setFont(new Font("SansSerif", Font.PLAIN, 13));
         tagline.setForeground(MUTED);
 
-        brandPanel.add(logo);
+        brand.add(logo);
+        brand.add(Box.createVerticalStrut(3));
+        brand.add(tagline);
 
-        brandPanel.add(
-                Box.createVerticalStrut(3)
-        );
+        String username = user != null && user.getName() != null
+                ? user.getName() : "User";
 
-        brandPanel.add(tagline);
+        JPanel userInfo = new JPanel();
+        userInfo.setOpaque(false);
+        userInfo.setLayout(new BoxLayout(userInfo, BoxLayout.Y_AXIS));
 
-        // =========================
-        // USER INFORMATION
-        // =========================
-
-        JPanel userPanel = new JPanel();
-
-        userPanel.setLayout(
-                new BoxLayout(
-                        userPanel,
-                        BoxLayout.Y_AXIS
-                )
-        );
-
-        userPanel.setBackground(CARD);
-
-        JLabel welcome =
-                new JLabel(
-                        "Welcome, " + user.getName()
-                );
-
-        welcome.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        15
-                )
-        );
-
+        JLabel welcome = new JLabel("Welcome, " + username);
+        welcome.setFont(new Font("SansSerif", Font.BOLD, 15));
         welcome.setForeground(TEXT);
+        welcome.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        welcome.setAlignmentX(
-                Component.RIGHT_ALIGNMENT
-        );
-
-        JLabel status =
-                new JLabel("Logged in");
-
-        status.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        12
-                )
-        );
-
+        JLabel status = new JLabel("Smart shopping starts here");
+        status.setFont(new Font("SansSerif", Font.PLAIN, 12));
         status.setForeground(MUTED);
+        status.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        status.setAlignmentX(
-                Component.RIGHT_ALIGNMENT
-        );
+        userInfo.add(welcome);
+        userInfo.add(Box.createVerticalStrut(4));
+        userInfo.add(status);
 
-        userPanel.add(welcome);
+        header.add(brand, BorderLayout.WEST);
+        header.add(userInfo, BorderLayout.EAST);
 
-        userPanel.add(
-                Box.createVerticalStrut(3)
-        );
+        content.add(header);
+        content.add(Box.createVerticalStrut(25));
 
-        userPanel.add(status);
+        // HERO BANNER
+        GradientPanel hero = new GradientPanel();
+        hero.setLayout(new BorderLayout(15, 10));
+        hero.setBorder(new EmptyBorder(25, 28, 25, 25));
+        hero.setPreferredSize(new Dimension(900, 220));
+        hero.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        hero.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        header.add(
-                brandPanel,
-                BorderLayout.WEST
-        );
+        JPanel heroText = new JPanel();
+        heroText.setOpaque(false);
+        heroText.setLayout(new BoxLayout(heroText, BoxLayout.Y_AXIS));
 
-        header.add(
-                userPanel,
-                BorderLayout.EAST
-        );
+        JLabel eyebrow = new JLabel("COMPARE  •  TRACK  •  SAVE");
+        eyebrow.setFont(new Font("SansSerif", Font.BOLD, 11));
+        eyebrow.setForeground(GREEN);
+        eyebrow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        dashboard.add(header);
+        JLabel heroTitle = new JLabel(
+                "<html>Find better prices for<br>"
+                + "your everyday essentials</html>");
+        heroTitle.setFont(new Font("SansSerif", Font.BOLD, 25));
+        heroTitle.setForeground(DARK_GREEN);
+        heroTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        dashboard.add(
-                Box.createVerticalStrut(25)
-        );
+        JLabel heroDescription = new JLabel(
+                "<html>Track product prices, compare shops and<br>"
+                + "make smarter shopping decisions.</html>");
+        heroDescription.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        heroDescription.setForeground(TEXT);
+        heroDescription.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // =========================
-        // DASHBOARD TITLE
-        // =========================
+        JButton addProductButton = new JButton("+ Add Product");
+        styleButton(addProductButton);
+        addProductButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        addProductButton.addActionListener(e -> openProducts());
 
-        JLabel title =
-                new JLabel("Dashboard");
+        heroText.add(eyebrow);
+        heroText.add(Box.createVerticalStrut(8));
+        heroText.add(heroTitle);
+        heroText.add(Box.createVerticalStrut(7));
+        heroText.add(heroDescription);
+        heroText.add(Box.createVerticalStrut(13));
+        heroText.add(addProductButton);
 
-        title.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        25
-                )
-        );
+        JLabel artwork = new JLabel(
+                "<html><div style='text-align:center;'>"
+                + "<font size='7'>🥬</font> "
+                + "<font size='7'>🍅</font><br>"
+                + "<font size='6'>🥑 &nbsp; 🥕</font>"
+                + "</div></html>");
+        artwork.setHorizontalAlignment(SwingConstants.CENTER);
+        artwork.setPreferredSize(new Dimension(190, 140));
 
-        title.setForeground(TEXT);
+        hero.add(heroText, BorderLayout.CENTER);
+        hero.add(artwork, BorderLayout.EAST);
 
-        title.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
+        content.add(hero);
+        content.add(Box.createVerticalStrut(27));
 
-        dashboard.add(title);
-
-        dashboard.add(
-                Box.createVerticalStrut(5)
-        );
-
-        JLabel description =
-                new JLabel(
-                        "Manage products, shops and prices from one place."
-                );
-
-        description.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        14
-                )
-        );
-
-        description.setForeground(MUTED);
-
-        description.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        dashboard.add(description);
-
-        dashboard.add(
-                Box.createVerticalStrut(22)
-        );
-
-        // =========================
-        // STATISTICS
-        // =========================
-
-        JPanel statsPanel =
-                new JPanel(
-                        new GridLayout(
-                                1,
-                                3,
-                                15,
-                                0
-                        )
-                );
-
-        statsPanel.setBackground(
-                BACKGROUND
-        );
-
-        statsPanel.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        82
-                )
-        );
-
-        statsPanel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        statsPanel.add(
-                createStatCard(
-                        "Products",
-                        "12"
-                )
-        );
-
-        statsPanel.add(
-                createStatCard(
-                        "Shops",
-                        "8"
-                )
-        );
-
-        statsPanel.add(
-                createStatCard(
-                        "Price Entries",
-                        "46"
-                )
-        );
-
-        dashboard.add(statsPanel);
-
-        dashboard.add(
-                Box.createVerticalStrut(28)
-        );
-
-        // =========================
         // QUICK ACTIONS
-        // =========================
+        JLabel sectionTitle = new JLabel("Explore PricePulse");
+        sectionTitle.setFont(new Font("SansSerif", Font.BOLD, 21));
+        sectionTitle.setForeground(TEXT);
+        sectionTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel quickTitle =
-                new JLabel("Quick Actions");
+        JLabel sectionDescription = new JLabel(
+                "Everything you need to make smarter price decisions.");
+        sectionDescription.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        sectionDescription.setForeground(MUTED);
+        sectionDescription.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        quickTitle.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        20
-                )
-        );
+        content.add(sectionTitle);
+        content.add(Box.createVerticalStrut(5));
+        content.add(sectionDescription);
+        content.add(Box.createVerticalStrut(16));
 
-        quickTitle.setForeground(TEXT);
+        JPanel cards = new JPanel(new GridLayout(0, 2, 16, 16));
+        cards.setOpaque(false);
+        cards.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        quickTitle.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
+        cards.add(createActionCard(
+                "📦",
+                "Add Product",
+                "Add or manage products in your price tracker.",
+                this::openProducts));
 
-        dashboard.add(quickTitle);
+        cards.add(createActionCard(
+                "🏪",
+                "Register Shop",
+                "Register, view and manage shops for price comparison.",
+                this::openShops));
 
-        dashboard.add(
-                Box.createVerticalStrut(12)
-        );
+        cards.add(createActionCard(
+                "🔎",
+                "Find Cheapest",
+                "Compare prices and discover the best deal.",
+                this::openCheapestShop));
 
-        // =========================
-        // ACTION CARDS
-        // =========================
+        cards.add(createActionCard(
+                "📈",
+                "Price Trends",
+                "Explore how product prices change over time.",
+                () -> showComingSoon("Price Trends")));
 
-        JPanel actionsPanel =
-                new JPanel(
-                        new GridLayout(
-                                0,
-                                2,
-                                15,
-                                15
-                        )
-                );
+        cards.add(createActionCard(
+                "🔔",
+                "Price Alerts",
+                "Keep track of prices you want to watch.",
+                () -> showComingSoon("Price Alerts")));
 
-        actionsPanel.setBackground(
-                BACKGROUND
-        );
+        content.add(cards);
+        content.add(Box.createVerticalStrut(23));
 
-        actionsPanel.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
+        JLabel footer = new JLabel(
+                "Little savings today. Smarter choices tomorrow. 🌿");
+        footer.setFont(new Font("SansSerif", Font.ITALIC, 13));
+        footer.setForeground(MUTED);
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Products
-        actionsPanel.add(
-                createActionCard(
-                        "Products",
-                        "Add or manage products",
-                        "Products"
-                )
-        );
+        content.add(footer);
 
-        // Shops
-        actionsPanel.add(
-                createActionCard(
-                        "Shops",
-                        "Add or manage shops",
-                        "Shops"
-                )
-        );
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setBackground(BACKGROUND);
+        scroll.getViewport().setBackground(BACKGROUND);
+        scroll.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        // Price Entries
-        actionsPanel.add(
-                createActionCard(
-                        "Price Entries",
-                        "Record and view prices",
-                        "Price Entries"
-                )
-        );
+        page.add(scroll, BorderLayout.CENTER);
 
-        // Price Trends
-        actionsPanel.add(
-                createActionCard(
-                        "Price Trends",
-                        "View price changes",
-                        "Price Trends"
-                )
-        );
-
-        dashboard.add(actionsPanel);
-
-        dashboard.add(
-                Box.createVerticalStrut(15)
-        );
-
-        // =========================
-        // CHEAPEST SHOP
-        // =========================
-
-        JPanel cheapestShop =
-                createLargeActionCard(
-                        "Find Cheapest Shop",
-                        "Compare prices and find the best shop for a product.",
-                        "Cheapest Shop"
-                );
-
-        cheapestShop.setAlignmentX(
-                Component.LEFT_ALIGNMENT
-        );
-
-        dashboard.add(cheapestShop);
-
-        dashboard.add(
-                Box.createVerticalStrut(15)
-        );
-
-        // =========================
-        // SCROLL PANE
-        // =========================
-
-        JScrollPane scrollPane =
-                new JScrollPane(dashboard);
-
-        scrollPane.setBorder(null);
-
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
-        );
-
-        scrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-        );
-
-        scrollPane.getVerticalScrollBar()
-                .setUnitIncrement(16);
-
-        // =========================
-        // HOME TAB
-        // =========================
-
-        tabs.addTab(
-                "Home",
-                scrollPane
-        );
-
-        add(
-                tabs,
-                BorderLayout.CENTER
-        );
+        return page;
     }
 
-    // =====================================================
-    // STAT CARD
-    // =====================================================
-
-    private JPanel createStatCard(
-            String title,
-            String value
-    ) {
-
-        JPanel card =
-                new JPanel(
-                        new BorderLayout()
-                );
-
-        card.setBackground(CARD);
-
-        card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                BORDER
-                        ),
-                        new EmptyBorder(
-                                12,
-                                16,
-                                12,
-                                16
-                        )
-                )
-        );
-
-        JLabel titleLabel =
-                new JLabel(title);
-
-        titleLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        13
-                )
-        );
-
-        titleLabel.setForeground(MUTED);
-
-        JLabel valueLabel =
-                new JLabel(value);
-
-        valueLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        23
-                )
-        );
-
-        valueLabel.setForeground(TEXT);
-
-        card.add(
-                titleLabel,
-                BorderLayout.NORTH
-        );
-
-        card.add(
-                valueLabel,
-                BorderLayout.SOUTH
-        );
-
-        return card;
-    }
-
-    // =====================================================
-    // ACTION CARD
-    // =====================================================
-
+    // REUSABLE ACTION CARD
     private JPanel createActionCard(
-        String title,
-        String description,
-        String moduleName
-) {
-    JPanel card = new JPanel(new BorderLayout());
-    card.setBackground(CARD);
-    card.setBorder(
-            BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(BORDER),
-                    new EmptyBorder(16, 18, 16, 15)
-            )
-    );
-    card.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-    JPanel textPanel = new JPanel();
-    textPanel.setLayout(
-            new BoxLayout(textPanel, BoxLayout.Y_AXIS)
-    );
-    textPanel.setBackground(CARD);
-
-    JLabel titleLabel = new JLabel(title);
-    titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-    titleLabel.setForeground(TEXT);
-
-    JLabel descriptionLabel = new JLabel(description);
-    descriptionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-    descriptionLabel.setForeground(MUTED);
-
-    textPanel.add(titleLabel);
-    textPanel.add(Box.createVerticalStrut(5));
-    textPanel.add(descriptionLabel);
-
-    card.add(textPanel, BorderLayout.CENTER);
-
-    card.addMouseListener(new java.awt.event.MouseAdapter() {
-        @Override
-        public void mouseEntered(java.awt.event.MouseEvent e) {
-            card.setBorder(
-                    BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(PRIMARY),
-                            new EmptyBorder(16, 18, 16, 15)
-                    )
-            );
-        }
-
-        @Override
-        public void mouseExited(java.awt.event.MouseEvent e) {
-            card.setBorder(
-                    BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(BORDER),
-                            new EmptyBorder(16, 18, 16, 15)
-                    )
-            );
-        }
-
-        @Override
-        public void mouseClicked(java.awt.event.MouseEvent e) {
-            if (moduleName.equals("Products")) {
-                ProductPanel panel = new ProductPanel(itemService);
-                addModuleTab("Products", panel);
-
-            } else if (moduleName.equals("Shops")) {
-                ShopPanel panel = new ShopPanel(shopService);
-                addModuleTab("Shops", panel);
-
-            } else if (moduleName.equals("Price Entries")) {
-                try {
-                    PriceEntryPanel panel = new PriceEntryPanel(
-                            itemService,
-                            shopService,
-                            authService,
-                            currentUser
-                    );
-                    addModuleTab("Price Entries", panel);
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(
-                            MainMenuFrame.this,
-                            "Could not open Price Entries:\n"
-                                    + ex.getMessage(),
-                            "PricePulse Error",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                }
-
-            } else {
-                showComingSoon(moduleName);
-            }
-        }
-    });
-
-    return card;
-}
-    // =====================================================
-    // LARGE ACTION CARD
-    // =====================================================
-
-    private JPanel createLargeActionCard(
+            String icon,
             String title,
             String description,
-            String moduleName
-    ) {
+            Runnable action) {
 
-        JPanel card =
-                new JPanel(
-                        new BorderLayout()
-                );
+        RoundedPanel card = new RoundedPanel(20, WHITE);
+        card.setLayout(new BorderLayout(12, 5));
+        card.setBorder(new EmptyBorder(18, 18, 18, 18));
+        card.setPreferredSize(new Dimension(330, 130));
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        card.setBackground(CARD);
-
-        card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                BORDER
-                        ),
-                        new EmptyBorder(
-                                18,
-                                20,
-                                18,
-                                20
-                        )
-                )
-        );
-
-        card.setCursor(
-                new Cursor(
-                        Cursor.HAND_CURSOR
-                )
-        );
+        JLabel iconLabel = new JLabel(icon);
+        iconLabel.setFont(new Font("SansSerif", Font.PLAIN, 27));
+        iconLabel.setVerticalAlignment(SwingConstants.TOP);
 
         JPanel textPanel = new JPanel();
+        textPanel.setOpaque(false);
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
 
-        textPanel.setLayout(
-                new BoxLayout(
-                        textPanel,
-                        BoxLayout.Y_AXIS
-                )
-        );
-
-        textPanel.setBackground(CARD);
-
-        JLabel titleLabel =
-                new JLabel(title);
-
-        titleLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        17
-                )
-        );
-
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         titleLabel.setForeground(TEXT);
 
-        JLabel descriptionLabel =
-                new JLabel(description);
-
-        descriptionLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        13
-                )
-        );
-
+        JLabel descriptionLabel = new JLabel(
+                "<html><div style='width:235px'>"
+                + description + "</div></html>");
+        descriptionLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         descriptionLabel.setForeground(MUTED);
 
+        JLabel explore = new JLabel("Explore  →");
+        explore.setFont(new Font("SansSerif", Font.BOLD, 12));
+        explore.setForeground(GREEN);
+
         textPanel.add(titleLabel);
-
-        textPanel.add(
-                Box.createVerticalStrut(5)
-        );
-
+        textPanel.add(Box.createVerticalStrut(7));
         textPanel.add(descriptionLabel);
+        textPanel.add(Box.createVerticalStrut(12));
+        textPanel.add(explore);
 
-        card.add(
-                textPanel,
-                BorderLayout.CENTER
-        );
+        card.add(iconLabel, BorderLayout.WEST);
+        card.add(textPanel, BorderLayout.CENTER);
 
-        // =========================
-        // HOVER + CLICK
-        // =========================
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setCardColor(MINT);
+                card.repaint();
+            }
 
-        card.addMouseListener(
-                new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setCardColor(WHITE);
+                card.repaint();
+            }
 
-                    @Override
-                    public void mouseEntered(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        card.setBorder(
-                                BorderFactory.createCompoundBorder(
-                                        BorderFactory.createLineBorder(
-                                                PRIMARY
-                                        ),
-                                        new EmptyBorder(
-                                                18,
-                                                20,
-                                                18,
-                                                20
-                                        )
-                                )
-                        );
-                    }
-
-                    @Override
-                    public void mouseExited(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        card.setBorder(
-                                BorderFactory.createCompoundBorder(
-                                        BorderFactory.createLineBorder(
-                                                BORDER
-                                        ),
-                                        new EmptyBorder(
-                                                18,
-                                                20,
-                                                18,
-                                                20
-                                        )
-                                )
-                        );
-                    }
-
-                    @Override
-                    public void mouseClicked(
-                            java.awt.event.MouseEvent e
-                    ) {
-
-                        addModuleTab("Cheapest Shop", new CheapestShopPanel(java.util.Collections.emptyList()));
-                        
-                    }
-                }
-        );
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                action.run();
+            }
+        });
 
         return card;
     }
 
-    // =====================================================
-    // COMING SOON
-    // =====================================================
+    // OPEN PRODUCT MODULE
+    private void openProducts() {
+        ProductPanel panel =
+                new ProductPanel(itemService, shopService);
 
-    private void showComingSoon(
-            String module
-    ) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                module + " module coming soon.",
-                "PricePulse",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        addModuleTab("Products", panel);
     }
 
-    // =====================================================
-    // ADD MODULE TAB
-    // =====================================================
+    // OPEN SHOP REGISTRATION MODULE
+    private void openShops() {
+        ShopPanel panel = new ShopPanel(shopService);
+        addModuleTab("Shops", panel);
+    }
 
-    public void addModuleTab(
-            String title,
-            JPanel panel
-    ) {
+    // OPEN FIND CHEAPEST MODULE
+    private void openCheapestShop() {
+        CheapestShopPanel panel =
+                new CheapestShopPanel(itemService, shopService);
 
-        tabs.addTab(
-                title,
-                panel
-        );
+        addModuleTab("Find Cheapest", panel);
+    }
 
-        tabs.setSelectedComponent(
-                panel
-        );
+    // PLACEHOLDER FOR MODULES NOT YET INTEGRATED
+    private void showComingSoon(String module) {
+        JOptionPane.showMessageDialog(
+                this,
+                module + " will be connected when its module is integrated.",
+                "PricePulse",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // REUSABLE TAB METHOD
+    public void addModuleTab(String title, JPanel panel) {
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            if (tabs.getTitleAt(i).equals(title)) {
+                tabs.setSelectedIndex(i);
+                return;
+            }
+        }
+
+        tabs.addTab(title, panel);
+        tabs.setSelectedComponent(panel);
+    }
+
+    // BUTTON STYLE
+    private void styleButton(JButton button) {
+        button.setFont(new Font("SansSerif", Font.BOLD, 13));
+        button.setForeground(WHITE);
+        button.setBackground(GREEN);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setBorder(new EmptyBorder(10, 17, 10, 17));
+        button.setCursor(Cursor.getPredefinedCursor(
+                Cursor.HAND_CURSOR));
+    }
+
+    // MINT-TO-CREAM GRADIENT
+    private static class GradientPanel extends JPanel {
+
+        GradientPanel() {
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            GradientPaint gradient = new GradientPaint(
+                    0, 0, new Color(215, 239, 221),
+                    getWidth(), getHeight(), CREAM);
+
+            g2.setPaint(gradient);
+            g2.fillRoundRect(
+                    0, 0, getWidth(), getHeight(), 26, 26);
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // ROUNDED CARD WITH SUBTLE SHADOW
+    private static class RoundedPanel extends JPanel {
+
+        private Color cardColor;
+        private final int radius;
+
+        RoundedPanel(int radius, Color color) {
+            this.radius = radius;
+            this.cardColor = color;
+            setOpaque(false);
+        }
+
+        void setCardColor(Color color) {
+            cardColor = color;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(new Color(35, 70, 48, 15));
+            g2.fillRoundRect(
+                    2, 3, getWidth() - 5, getHeight() - 5,
+                    radius, radius);
+
+            g2.setColor(cardColor);
+            g2.fillRoundRect(
+                    0, 0, getWidth() - 5, getHeight() - 6,
+                    radius, radius);
+
+            g2.setColor(BORDER);
+            g2.drawRoundRect(
+                    0, 0, getWidth() - 5, getHeight() - 6,
+                    radius, radius);
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 }
