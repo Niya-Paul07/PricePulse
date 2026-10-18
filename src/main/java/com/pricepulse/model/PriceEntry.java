@@ -38,9 +38,16 @@ public class PriceEntry {
      * Enforces the design doc's "no nulls" rule for item/shop/user,
      * plus a sane non-negative price check.
      */
+    
     public boolean isValid() {
-        return item != null && shop != null && user != null && price >= 0;
+    return item != null
+            && shop != null
+            && user != null
+            && price > 0
+            && Double.isFinite(price)
+            && date != null;
     }
+
 
     @Override
     public String toString() {
