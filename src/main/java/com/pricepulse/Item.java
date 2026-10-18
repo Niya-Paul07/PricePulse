@@ -1,5 +1,6 @@
 package com.pricepulse;
 
+import com.pricepulse.model.PriceEntry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,24 +10,45 @@ public class Item {
     private String name;
     private String category;
     private String unit;
+    private double price;
+    private String shopName;
 
     public Item() {
+        this.shopName = "";
     }
 
     public Item(int id, String name, String category, String unit) {
+        this(id, name, category, unit, 0.0, "");
+    }
+
+    public Item(String name, String category, String unit) {
+        this(0, name, category, unit, 0.0, "");
+    }
+
+    public Item(int id, String name, String category,
+                String unit, double price) {
+        this(id, name, category, unit, price, "");
+    }
+
+    public Item(String name, String category,
+                String unit, double price) {
+        this(0, name, category, unit, price, "");
+    }
+
+    public Item(String name, String category, String unit,
+                double price, String shopName) {
+        this(0, name, category, unit, price, shopName);
+    }
+
+    public Item(int id, String name, String category,
+                String unit, double price, String shopName) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.unit = unit;
+        this.price = price;
+        this.shopName = shopName == null ? "" : shopName;
     }
-
-    public Item(String name, String category, String unit) {
-        this.name = name;
-        this.category = category;
-        this.unit = unit;
-    }
-
-    // Getters and Setters
 
     public int getId() {
         return id;
@@ -60,7 +82,22 @@ public class Item {
         this.unit = unit;
     }
 
-    // Price history will be handled by PriceEntry/PriceTrackerService
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName == null ? "" : shopName;
+    }
+
     public List<PriceEntry> getPriceHistory() {
         return new ArrayList<>();
     }
@@ -72,6 +109,8 @@ public class Item {
                 ", name='" + name + '\'' +
                 ", category='" + category + '\'' +
                 ", unit='" + unit + '\'' +
+                ", price=" + price +
+                ", shopName='" + shopName + '\'' +
                 '}';
     }
 }
