@@ -217,18 +217,19 @@ public class MainMenuFrame extends JFrame {
         
 
         cards.add(createActionCard(
-                "📈",
-                "Price Trends",
-                "Explore how product prices change over time.",
-                () -> showComingSoon("Price Trends")));
-        
-cards.add(createActionCard(
-        "💰",
-        "Price Entry",
-        "Add and manage product prices at different shops.",
-        () -> openPriceEntry(user)
+    "📈",
+    "Price Trends",
+    "Explore how product prices change over time.",
+    () -> showComingSoon("Price Trends")
 ));
-                this::openPriceTrends));
+
+cards.add(createActionCard(
+    "💰",
+    "Price Entry",
+    "Add and manage product prices at different shops.",
+    () -> openPriceEntry(user)
+));
+                
 
         cards.add(createActionCard(
                 "🔔",
