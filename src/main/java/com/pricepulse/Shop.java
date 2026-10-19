@@ -1,8 +1,9 @@
 package com.pricepulse;
 
+import com.pricepulse.model.PriceEntry;
 import java.util.ArrayList;
 import java.util.List;
-
+import com.pricepulse.model.PriceEntry;
 public class Shop {
 
     private int id;
