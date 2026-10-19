@@ -10,7 +10,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,7 +20,6 @@ public class ProductPanel extends JPanel {
 
     private JComboBox<String> nameCombo;
     private JTextField priceField;
-
     private JComboBox<String> categoryCombo;
     private JComboBox<String> unitCombo;
     private JComboBox<String> shopCombo;
@@ -30,6 +28,11 @@ public class ProductPanel extends JPanel {
     private DefaultTableModel tableModel;
 
     private int selectedItemId = -1;
+
+    private boolean updatingShopCombo = false;
+
+    private static final String REGISTER_SHOP =
+            "＋ Register a new shop...";
 
     private static final Color GREEN = new Color(32, 112, 81);
     private static final Color DARK_GREEN = new Color(25, 67, 52);
@@ -51,9 +54,21 @@ public class ProductPanel extends JPanel {
         add(buildHeader(), BorderLayout.NORTH);
         add(buildContent(), BorderLayout.CENTER);
 
-        refreshShops();
+        refreshShops(null);
         refreshProductNames();
         refreshTable();
+
+        shopCombo.addActionListener(e -> {
+            if (updatingShopCombo) {
+                return;
+            }
+
+            Object selected = shopCombo.getSelectedItem();
+
+            if (REGISTER_SHOP.equals(selected)) {
+                openShopRegistration();
+            }
+        });
     }
 
     private JPanel buildHeader() {
@@ -92,7 +107,6 @@ public class ProductPanel extends JPanel {
                 BorderFactory.createLineBorder(BORDER),
                 new EmptyBorder(15, 15, 15, 15)));
 
-        // Editable dropdown: select an existing product or type a new one.
         nameCombo = new JComboBox<>();
         nameCombo.setEditable(true);
         nameCombo.setMaximumRowCount(8);
@@ -111,6 +125,7 @@ public class ProductPanel extends JPanel {
         });
 
         shopCombo = new JComboBox<>();
+        shopCombo.setMaximumRowCount(8);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 7, 6, 7);
@@ -127,14 +142,20 @@ public class ProductPanel extends JPanel {
         JButton updateButton = createButton("Update");
         JButton deleteButton = createButton("Delete");
         JButton clearButton = createButton("Clear");
-        JButton refreshShopsButton = createButton("Refresh Shops");
+        JButton refreshButton = createButton("Refresh Shops");
 
         addButton.addActionListener(e -> addProduct());
         updateButton.addActionListener(e -> updateProduct());
         deleteButton.addActionListener(e -> deleteProduct());
         clearButton.addActionListener(e -> clearForm());
-        refreshShopsButton.addActionListener(e -> {
-            refreshShops();
+
+        refreshButton.addActionListener(e -> {
+            Object selected = shopCombo.getSelectedItem();
+            String previous = selected == null
+                    || REGISTER_SHOP.equals(selected)
+                    ? null : selected.toString();
+
+            refreshShops(previous);
             refreshProductNames();
         });
 
@@ -144,7 +165,7 @@ public class ProductPanel extends JPanel {
         buttons.add(updateButton);
         buttons.add(deleteButton);
         buttons.add(clearButton);
-        buttons.add(refreshShopsButton);
+        buttons.add(refreshButton);
 
         gbc.gridx = 0;
         gbc.gridy = 6;
@@ -154,9 +175,14 @@ public class ProductPanel extends JPanel {
         return form;
     }
 
-    private void addField(JPanel panel, GridBagConstraints gbc,
-                          int column, int labelRow,
-                          String labelText, JComponent field) {
+    private void addField(
+            JPanel panel,
+            GridBagConstraints gbc,
+            int column,
+            int labelRow,
+            String labelText,
+            JComponent field) {
+
         gbc.gridx = column;
         gbc.gridy = labelRow;
         gbc.gridwidth = 1;
@@ -190,8 +216,10 @@ public class ProductPanel extends JPanel {
         title.setForeground(TEXT);
 
         tableModel = new DefaultTableModel(
-                new String[]{"ID", "Product", "Category",
-                    "Unit", "Shop", "Price (₹)"}, 0) {
+                new String[]{
+                    "ID", "Product", "Category",
+                    "Unit", "Shop", "Price (₹)"
+                }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -223,7 +251,39 @@ public class ProductPanel extends JPanel {
 
         panel.add(title, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+
         return panel;
+    }
+
+    // OPEN SHOP MANAGEMENT WITHOUT LOSING PRODUCT FORM DETAILS
+    private void openShopRegistration() {
+
+        Object selected = shopCombo.getSelectedItem();
+        String previousShop = selected == null
+                || REGISTER_SHOP.equals(selected)
+                ? null : selected.toString();
+
+        Window owner = SwingUtilities.getWindowAncestor(this);
+
+        JDialog dialog = new JDialog(
+                owner,
+                "Shop Management",
+                Dialog.ModalityType.APPLICATION_MODAL);
+
+        ShopPanel shopPanel = new ShopPanel(shopService);
+
+        dialog.setContentPane(shopPanel);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setMinimumSize(new Dimension(750, 500));
+        dialog.setSize(850, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        // Refresh after the user closes Shop Management.
+        refreshShops(previousShop);
+
+        // Preserve the other product fields and refresh product names.
+        refreshProductNames();
     }
 
     private void addProduct() {
@@ -231,14 +291,11 @@ public class ProductPanel extends JPanel {
             return;
         }
 
-        String name = getProductName();
+        String name = findExistingProductName(getProductName());
         String category = (String) categoryCombo.getSelectedItem();
         String unit = (String) unitCombo.getSelectedItem();
         String shop = (String) shopCombo.getSelectedItem();
         double price = readPrice();
-
-        // Reuse the existing spelling when a product already exists.
-        name = findExistingProductName(name);
 
         Item item = new Item(name, category, unit, price, shop);
 
@@ -264,11 +321,9 @@ public class ProductPanel extends JPanel {
             return;
         }
 
-        String name = findExistingProductName(getProductName());
-
         Item updatedItem = new Item(
                 selectedItemId,
-                name,
+                findExistingProductName(getProductName()),
                 (String) categoryCombo.getSelectedItem(),
                 (String) unitCombo.getSelectedItem(),
                 readPrice(),
@@ -320,9 +375,12 @@ public class ProductPanel extends JPanel {
             return false;
         }
 
-        if (shopCombo.getSelectedItem() == null
-                || shopCombo.getSelectedItem().toString().isEmpty()) {
-            showMessage("Please register a shop first, then select it.");
+        Object selectedShop = shopCombo.getSelectedItem();
+
+        if (selectedShop == null
+                || selectedShop.toString().trim().isEmpty()
+                || REGISTER_SHOP.equals(selectedShop)) {
+            showMessage("Please register and select a shop first.");
             return false;
         }
 
@@ -349,24 +407,31 @@ public class ProductPanel extends JPanel {
 
     private String findExistingProductName(String enteredName) {
         for (Item item : itemService.getAllItems()) {
-            if (item.getName().trim().equalsIgnoreCase(enteredName.trim())) {
+            if (item.getName() != null
+                    && item.getName().trim().equalsIgnoreCase(
+                            enteredName.trim())) {
                 return item.getName();
             }
         }
+
         return enteredName.trim();
     }
 
     private void refreshProductNames() {
         String currentName = getProductName();
 
-        Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> names = new TreeSet<>(
+                String.CASE_INSENSITIVE_ORDER);
+
         for (Item item : itemService.getAllItems()) {
-            if (item.getName() != null && !item.getName().trim().isEmpty()) {
+            if (item.getName() != null
+                    && !item.getName().trim().isEmpty()) {
                 names.add(item.getName().trim());
             }
         }
 
         nameCombo.removeAllItems();
+
         for (String name : names) {
             nameCombo.addItem(name);
         }
@@ -381,6 +446,7 @@ public class ProductPanel extends JPanel {
 
     private void loadSelectedProduct() {
         int row = productTable.getSelectedRow();
+
         if (row == -1) {
             return;
         }
@@ -388,36 +454,52 @@ public class ProductPanel extends JPanel {
         selectedItemId = Integer.parseInt(
                 tableModel.getValueAt(row, 0).toString());
 
-        nameCombo.setSelectedItem(tableModel.getValueAt(row, 1).toString());
-        categoryCombo.setSelectedItem(tableModel.getValueAt(row, 2).toString());
-        unitCombo.setSelectedItem(tableModel.getValueAt(row, 3).toString());
+        nameCombo.setSelectedItem(
+                tableModel.getValueAt(row, 1).toString());
+        categoryCombo.setSelectedItem(
+                tableModel.getValueAt(row, 2).toString());
+        unitCombo.setSelectedItem(
+                tableModel.getValueAt(row, 3).toString());
 
         selectShop(tableModel.getValueAt(row, 4).toString());
-        priceField.setText(tableModel.getValueAt(row, 5).toString());
+
+        priceField.setText(
+                tableModel.getValueAt(row, 5).toString());
     }
 
     private void selectShop(String shopName) {
         for (int i = 0; i < shopCombo.getItemCount(); i++) {
-            if (shopCombo.getItemAt(i).equals(shopName)) {
+            if (shopName.equals(shopCombo.getItemAt(i))) {
                 shopCombo.setSelectedIndex(i);
                 return;
             }
         }
 
-        shopCombo.addItem(shopName);
-        shopCombo.setSelectedItem(shopName);
+        refreshShops(shopName);
     }
 
-    private void refreshShops() {
-        String previousSelection = (String) shopCombo.getSelectedItem();
-        shopCombo.removeAllItems();
+    private void refreshShops(String preferredShop) {
+        updatingShopCombo = true;
 
-        for (Shop shop : shopService.getAllShops()) {
-            shopCombo.addItem(shop.getName());
-        }
+        try {
+            shopCombo.removeAllItems();
 
-        if (previousSelection != null) {
-            shopCombo.setSelectedItem(previousSelection);
+            for (Shop shop : shopService.getAllShops()) {
+                shopCombo.addItem(shop.getName());
+            }
+
+            shopCombo.addItem(REGISTER_SHOP);
+
+            if (preferredShop != null) {
+                shopCombo.setSelectedItem(preferredShop);
+            }
+
+            if (shopCombo.getSelectedIndex() == -1
+                    && shopCombo.getItemCount() > 0) {
+                shopCombo.setSelectedIndex(0);
+            }
+        } finally {
+            updatingShopCombo = false;
         }
     }
 
@@ -458,13 +540,17 @@ public class ProductPanel extends JPanel {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setBorder(new EmptyBorder(8, 11, 8, 11));
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setCursor(Cursor.getPredefinedCursor(
+                Cursor.HAND_CURSOR));
+
         return button;
     }
 
     private void showMessage(String message) {
         JOptionPane.showMessageDialog(
-                this, message, "PricePulse",
+                this,
+                message,
+                "PricePulse",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 }
