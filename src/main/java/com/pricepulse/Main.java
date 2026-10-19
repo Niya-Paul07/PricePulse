@@ -20,7 +20,7 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             AuthWindow authWindow = new AuthWindow(authService, user -> {
-                MainMenuFrame mainMenu = new MainMenuFrame(user, authService);
+                MainMenuFrame mainMenu = new MainMenuFrame(user);
                 mainMenu.setVisible(true);
                 // Save users on close of the main window (simple approach for now).
                 mainMenu.addWindowListener(new java.awt.event.WindowAdapter() {
