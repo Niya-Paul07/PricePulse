@@ -15,11 +15,11 @@ public class MainMenuFrame extends JFrame {
 
     private final JTabbedPane tabs = new JTabbedPane();
 
-    // Shared services used by all modules
+    // Shared services
     private final ItemService itemService = new ItemService();
     private final ShopService shopService = new ShopService();
 
-    // PricePulse colour palette
+    // Colours
     private static final Color GREEN = new Color(32, 112, 81);
     private static final Color DARK_GREEN = new Color(25, 67, 52);
     private static final Color BACKGROUND = new Color(247, 250, 246);
@@ -84,7 +84,8 @@ public class MainMenuFrame extends JFrame {
         brand.add(tagline);
 
         String username = user != null && user.getName() != null
-                ? user.getName() : "User";
+                ? user.getName()
+                : "User";
 
         JPanel userInfo = new JPanel();
         userInfo.setOpaque(false);
@@ -129,14 +130,14 @@ public class MainMenuFrame extends JFrame {
 
         JLabel heroTitle = new JLabel(
                 "<html>Find better prices for<br>"
-                + "your everyday essentials</html>");
+                        + "your everyday essentials</html>");
         heroTitle.setFont(new Font("SansSerif", Font.BOLD, 25));
         heroTitle.setForeground(DARK_GREEN);
         heroTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel heroDescription = new JLabel(
                 "<html>Track product prices, compare shops and<br>"
-                + "make smarter shopping decisions.</html>");
+                        + "make smarter shopping decisions.</html>");
         heroDescription.setFont(new Font("SansSerif", Font.PLAIN, 13));
         heroDescription.setForeground(TEXT);
         heroDescription.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -156,10 +157,11 @@ public class MainMenuFrame extends JFrame {
 
         JLabel artwork = new JLabel(
                 "<html><div style='text-align:center;'>"
-                + "<font size='7'>🥬</font> "
-                + "<font size='7'>🍅</font><br>"
-                + "<font size='6'>🥑 &nbsp; 🥕</font>"
-                + "</div></html>");
+                        + "<font size='7'>🥬</font> "
+                        + "<font size='7'>🍅</font><br>"
+                        + "<font size='6'>🥑 &nbsp; 🥕</font>"
+                        + "</div></html>");
+
         artwork.setHorizontalAlignment(SwingConstants.CENTER);
         artwork.setPreferredSize(new Dimension(190, 140));
 
@@ -212,13 +214,13 @@ public class MainMenuFrame extends JFrame {
                 "📈",
                 "Price Trends",
                 "Explore how product prices change over time.",
-                () -> showComingSoon("Price Trends")));
+                this::openPriceTrends));
 
         cards.add(createActionCard(
                 "🔔",
                 "Price Alerts",
                 "Keep track of prices you want to watch.",
-                () -> showComingSoon("Price Alerts")));
+                this::openPriceAlerts));
 
         content.add(cards);
         content.add(Box.createVerticalStrut(23));
@@ -242,6 +244,11 @@ public class MainMenuFrame extends JFrame {
         page.add(scroll, BorderLayout.CENTER);
 
         return page;
+    }
+
+    private Component createActionCard(String icon, String title, String description, Object action) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createActionCard'");
     }
 
     // REUSABLE ACTION CARD
@@ -271,7 +278,7 @@ public class MainMenuFrame extends JFrame {
 
         JLabel descriptionLabel = new JLabel(
                 "<html><div style='width:235px'>"
-                + description + "</div></html>");
+                        + description + "</div></html>");
         descriptionLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         descriptionLabel.setForeground(MUTED);
 
@@ -312,25 +319,33 @@ public class MainMenuFrame extends JFrame {
 
     // OPEN PRODUCT MODULE
     private void openProducts() {
-        ProductPanel panel =
-                new ProductPanel(itemService, shopService);
-
+        ProductPanel panel = new ProductPanel(itemService, shopService);
         addModuleTab("Products", panel);
     }
 
-    // OPEN SHOP REGISTRATION MODULE
+    // OPEN SHOP MODULE
     private void openShops() {
         ShopPanel panel = new ShopPanel(shopService);
         addModuleTab("Shops", panel);
     }
 
-    // OPEN FIND CHEAPEST MODULE
+    // OPEN CHEAPEST SHOP MODULE
     private void openCheapestShop() {
         CheapestShopPanel panel =
                 new CheapestShopPanel(itemService, shopService);
 
         addModuleTab("Find Cheapest", panel);
     }
+
+    // TEMPORARY PRICE TRENDS PLACEHOLDER
+    private void openPriceTrends() {
+         PriceTrendsPanel panel = new PriceTrendsPanel();
+         addModuleTab("Price Trends", panel);
+         }
+    private void openPriceAlerts() {
+        PriceAlertsPanel panel = new PriceAlertsPanel();
+        addModuleTab("Price Alerts", panel);
+        }
 
     // PLACEHOLDER FOR MODULES NOT YET INTEGRATED
     private void showComingSoon(String module) {
@@ -362,8 +377,7 @@ public class MainMenuFrame extends JFrame {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setBorder(new EmptyBorder(10, 17, 10, 17));
-        button.setCursor(Cursor.getPredefinedCursor(
-                Cursor.HAND_CURSOR));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     // MINT-TO-CREAM GRADIENT
@@ -394,7 +408,7 @@ public class MainMenuFrame extends JFrame {
         }
     }
 
-    // ROUNDED CARD WITH SUBTLE SHADOW
+    // ROUNDED CARD
     private static class RoundedPanel extends JPanel {
 
         private Color cardColor;
