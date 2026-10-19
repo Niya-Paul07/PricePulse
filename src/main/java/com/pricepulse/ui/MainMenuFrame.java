@@ -10,6 +10,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import com.pricepulse.auth.AuthService;
+
 
 public class MainMenuFrame extends JFrame {
 
@@ -18,6 +20,7 @@ public class MainMenuFrame extends JFrame {
     // Shared services used by all modules
     private final ItemService itemService = new ItemService();
     private final ShopService shopService = new ShopService();
+    private final AuthService authService;
 
     // PricePulse colour palette
     private static final Color GREEN = new Color(32, 112, 81);
@@ -30,8 +33,9 @@ public class MainMenuFrame extends JFrame {
     private static final Color BORDER = new Color(225, 235, 226);
     private static final Color WHITE = Color.WHITE;
 
-    public MainMenuFrame(User user) {
+    public MainMenuFrame(User user,AuthService authService) {
         super("PricePulse | Smart Price Tracking");
+        this.authService=authService;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 740);
@@ -207,12 +211,21 @@ public class MainMenuFrame extends JFrame {
                 "Find Cheapest",
                 "Compare prices and discover the best deal.",
                 this::openCheapestShop));
+        
+        
 
         cards.add(createActionCard(
                 "📈",
                 "Price Trends",
                 "Explore how product prices change over time.",
                 () -> showComingSoon("Price Trends")));
+        
+cards.add(createActionCard(
+        "💰",
+        "Price Entry",
+        "Add and manage product prices at different shops.",
+        () -> openPriceEntry(user)
+));
 
         cards.add(createActionCard(
                 "🔔",
@@ -326,11 +339,24 @@ public class MainMenuFrame extends JFrame {
 
     // OPEN FIND CHEAPEST MODULE
     private void openCheapestShop() {
-        CheapestShopPanel panel =
-                new CheapestShopPanel(itemService, shopService);
+        
+    CheapestShopPanel panel =
+            new CheapestShopPanel(itemService, shopService);
+    addModuleTab("Find Cheapest", panel);
 
-        addModuleTab("Find Cheapest", panel);
     }
+private void openPriceEntry(User user) {
+    PriceEntryPanel panel = new PriceEntryPanel(
+            itemService,
+            shopService,
+            authService,
+            user
+    );
+
+    addModuleTab("Price Entry", panel);
+}
+
+
 
     // PLACEHOLDER FOR MODULES NOT YET INTEGRATED
     private void showComingSoon(String module) {
